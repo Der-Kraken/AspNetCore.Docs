@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Localization;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace MvcMovie.Localization
 {
@@ -11,24 +12,10 @@ namespace MvcMovie.Localization
         {
             if (attribute == null) throw new ArgumentNullException(nameof(attribute));
 
-            IAttributeAdapter adapter;
+            attribute.ErrorMessage = attribute.GetType().Name;
 
-            var typeofAttribute = attribute.GetType();
-
-            if (typeofAttribute == typeof(RequiredAttribute))
-            {
-                adapter = new LocalizedRequiredAttributeAdapter((RequiredAttribute)attribute, stringLocalizer);
-            }
-            else if (typeofAttribute == typeof(StringLengthAttribute))
-            {
-                adapter = new LocalizedStringLengthAttributeAdapter((StringLengthAttribute)attribute, stringLocalizer);
-            }
-            else 
-            {
-                adapter = null;
-            }
-
-            return adapter;
+            return new ValidationAttributeAdapterProvider()
+                .GetAttributeAdapter(attribute, stringLocalizer);
         }
     }
 }
