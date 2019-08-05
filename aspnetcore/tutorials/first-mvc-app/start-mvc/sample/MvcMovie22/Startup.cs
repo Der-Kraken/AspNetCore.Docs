@@ -11,6 +11,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using MvcMovie.Models;
+using Microsoft.AspNetCore.Mvc.DataAnnotations;
+using MvcMovie.Localization;
+using Microsoft.AspNetCore.Localization;
+using System.Globalization;
 
 namespace MvcMovie
 {
@@ -36,8 +40,24 @@ namespace MvcMovie
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            services.AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+                .AddDataAnnotationsLocalization(options =>
+                {
+                    options.DataAnnotationLocalizerProvider = (type, factory) =>
+                    {
+                        return factory.Create("DataAnnotation", GetType().Assembly.GetName().Name);
+                    };
+                })
+                .AddViewLocalization()
+                ;
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddSingleton<IValidationAttributeAdapterProvider, LocalizedValidationAttributeAdapterProvider>();
+
+            services.AddLocalization(o =>
+            {
+                o.ResourcesPath = "Localization";
+            });
 
             services.AddDbContext<MvcMovieContext>(options =>
                  options.UseSqlServer(Configuration.GetConnectionString("MvcMovieContext")));
@@ -66,6 +86,14 @@ namespace MvcMovie
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            var cultureOptions = new RequestLocalizationOptions()
+            {
+                DefaultRequestCulture = new RequestCulture("de-DE"),
+                SupportedCultures = new List<CultureInfo>() { new CultureInfo("de-DE") },
+                SupportedUICultures = new List<CultureInfo>() { new CultureInfo("de-DE") },
+            };
+            app.UseRequestLocalization(cultureOptions);
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
