@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Localization;
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 
 namespace MvcMovie.Localization
 {
@@ -12,7 +11,13 @@ namespace MvcMovie.Localization
         {
             if (attribute == null) throw new ArgumentNullException(nameof(attribute));
 
-            attribute.ErrorMessage = attribute.GetType().Name;
+            // If no domain specific error message is placed then reference a global one.
+            if (string.IsNullOrEmpty(attribute.ErrorMessage)
+                && string.IsNullOrEmpty(attribute.ErrorMessageResourceName)
+                && attribute.ErrorMessageResourceType == null)
+            {
+                attribute.ErrorMessage = attribute.GetType().Name;
+            }
 
             return new ValidationAttributeAdapterProvider()
                 .GetAttributeAdapter(attribute, stringLocalizer);
